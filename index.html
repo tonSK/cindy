@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>iPhone Workout Timer & Set Tracker</title>
+    <title>Cindy Workout</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -149,7 +149,7 @@
     </div>
 
     <script>
-        const INITIAL_TIME = 20 * 60; // 20 minutes countdown in seconds
+        const INITIAL_TIME = 20 * 60;
         let remainingSeconds = INITIAL_TIME;
         let isRunning = false;
         let soundEnabled = true;
@@ -157,7 +157,6 @@
         let completedSets = 0;
         const TARGET_SETS_GOAL = 20;
 
-        // Timestamp tracking variables for screen lock support
         let targetEndTime = null;
         let animationFrameId = null;
 
@@ -166,9 +165,10 @@
         const startPauseIcon = document.getElementById('start-pause-icon');
         const timerProgress = document.getElementById('timer-progress');
 
+        // Initialize AudioContext globally once on load/interaction
         let audioCtx = null;
 
-        function getAudioContext() {
+        function initAudioContext() {
             if (!audioCtx) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 if (AudioContext) {
@@ -178,18 +178,22 @@
             if (audioCtx && audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
-            return audioCtx;
         }
+
+        // Trigger global audio initialization on first touch/click anywhere on page
+        document.addEventListener('click', () => {
+            initAudioContext();
+        }, { once: true });
 
         function playBeep(frequency = 880, duration = 0.2, count = 1, interval = 0.3) {
             if (!soundEnabled) return;
-            const ctx = getAudioContext();
-            if (!ctx) return;
+            initAudioContext();
+            if (!audioCtx) return;
 
             for (let i = 0; i < count; i++) {
-                const startTime = ctx.currentTime + (i * interval);
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
+                const startTime = audioCtx.currentTime + (i * interval);
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
 
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(frequency, startTime);
@@ -198,7 +202,7 @@
                 gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
 
                 osc.connect(gain);
-                gain.connect(ctx.destination);
+                gain.connect(audioCtx.destination);
 
                 osc.start(startTime);
                 osc.stop(startTime + duration);
@@ -234,7 +238,7 @@
         }
 
         function toggleTimer() {
-            getAudioContext();
+            initAudioContext();
             if (isRunning) {
                 pauseTimer();
             } else {
@@ -284,30 +288,31 @@
         }
 
         function resetAll() {
+            initAudioContext();
             pauseTimer();
             remainingSeconds = INITIAL_TIME;
             updateDisplay();
             startPauseText.innerText = 'Start Timer';
             startPauseIcon.className = 'fa-solid fa-play';
 
-            // Clear sets counter and reset progress bar
             completedSets = 0;
             updateSetUI();
             playBeep(400, 0.1);
         }
 
         function incrementSet() {
-            getAudioContext();
+            initAudioContext();
             completedSets++;
             updateSetUI();
             playBeep(1200, 0.08, 1);
         }
 
         function decrementSet() {
-            getAudioContext();
+            initAudioContext();
             if (completedSets > 0) {
                 completedSets--;
                 updateSetUI();
+                playBeep(600, 0.08, 1);
             }
         }
 
@@ -323,14 +328,12 @@
             }
         }
 
-        // Handle screen wake / tab focus sync
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible' && isRunning) {
                 updateLoop();
             }
         });
 
-        // Initial render
         updateDisplay();
         updateSetUI();
     </script>
