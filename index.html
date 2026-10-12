@@ -1,410 +1,247 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Cindy Workout Timer</title>
+    <title>iPhone Workout Timer & Set Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        appleDark: '#0A0A0C',
+                        appleCard: '#16161A',
+                        appleCardBorder: '#27272A',
+                        accentBlue: '#00F0FF',
+                        accentPurple: '#8B5CF6'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --bg-color: #000000;
-            --card-bg: rgba(255, 255, 255, 0.05);
-            --card-border: rgba(255, 255, 255, 0.1);
-            --accent-blue: #0A84FF;
-            --accent-green: #30D158;
-            --accent-red: #FF453A;
-            --text-main: #FFFFFF;
-            --text-sub: #8E8E93;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-        }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            height: 100vh;
-            height: 100dvh;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: clamp(16px, 4vh, 24px) 20px clamp(20px, 5vh, 32px);
-            overflow: hidden;
+            background-color: #0A0A0C;
+            color: #F8FAFC;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
-
-        /* Header */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: env(safe-area-inset-top, 10px);
-        }
-
-        .title-group h1 {
-            font-size: clamp(22px, 3.2vw, 26px);
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-
-        .sound-btn {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            color: var(--text-main);
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-        }
-
-        .sound-btn:active {
-            transform: scale(0.92);
-        }
-
-        /* Main Container */
-        main {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: clamp(16px, 3vh, 28px);
-            flex: 1;
-        }
-
-        /* Timer Display */
-        .timer-container {
-            position: relative;
-            width: clamp(220px, 60vw, 280px);
-            height: clamp(220px, 60vw, 280px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .progress-ring {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            transform: rotate(-90deg);
-        }
-
-        .progress-ring__circle-bg {
-            stroke: rgba(255, 255, 255, 0.08);
-            stroke-width: 10;
-            fill: transparent;
-        }
-
-        .progress-ring__circle {
-            stroke: var(--accent-blue);
-            stroke-width: 10;
-            stroke-linecap: round;
-            fill: transparent;
-            transition: stroke-dashoffset 0.5s ease;
-        }
-
-        .timer-text-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            z-index: 2;
-        }
-
-        .timer-display {
-            font-size: clamp(48px, 13vw, 64px);
-            font-weight: 800;
-            font-variant-numeric: tabular-nums;
-            letter-spacing: -1.5px;
-            line-height: 1;
-        }
-
-        .timer-status {
-            font-size: 13px;
-            color: var(--text-sub);
-            font-weight: 500;
-            margin-top: 6px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* Exercise Info Box */
-        .exercise-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 16px 20px;
-            width: 100%;
-            max-width: 360px;
+        .glass-panel {
+            background: rgba(22, 22, 26, 0.8);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
-
-        .exercise-card h3 {
-            font-size: 12px;
-            color: var(--text-sub);
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin-bottom: 10px;
-        }
-
-        .exercise-list {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .exercise-item {
-            font-size: clamp(15px, 2.2vw, 17px);
-            font-weight: 600;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-        }
-
-        .exercise-item::before {
-            content: "•";
-            color: var(--accent-blue);
-            font-size: 20px;
-            margin-right: 10px;
-            line-height: 0;
-        }
-
-        /* Set Tracker & Controls */
-        .set-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 16px 20px;
-            width: 100%;
-            max-width: 360px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .set-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .set-label {
-            font-size: 12px;
-            color: var(--text-sub);
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-        }
-
-        .set-count {
-            font-size: clamp(28px, 7vw, 36px);
-            font-weight: 800;
-            color: var(--accent-blue);
-            line-height: 1.1;
-        }
-
-        .add-set-btn {
-            background: var(--accent-blue);
-            color: #FFFFFF;
-            border: none;
-            padding: 14px 22px;
-            border-radius: 14px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
-        }
-
-        .add-set-btn:active {
-            transform: scale(0.95);
-            background: #0071E3;
-        }
-
-        /* Action Controls */
-        .controls {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 12px;
-            width: 100%;
-            max-width: 360px;
-        }
-
-        .btn {
-            border: none;
-            border-radius: 16px;
-            padding: 18px;
-            font-size: 18px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn-start {
-            background: var(--accent-green);
-            color: #000000;
-        }
-
-        .btn-pause {
-            background: #FF9F0A;
-            color: #000000;
-        }
-
-        .btn-reset {
-            background: rgba(255, 69, 58, 0.15);
-            color: var(--accent-red);
-            border: 1px solid rgba(255, 69, 58, 0.3);
-        }
-
-        .btn:active {
-            transform: scale(0.96);
-            opacity: 0.9;
+        .glass-button {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
         }
     </style>
 </head>
-<body>
+<body class="flex items-center justify-center min-h-screen bg-[#0A0A0C] overflow-hidden selection:bg-cyan-500 selection:text-black">
 
-    <header>
-        <div class="title-group">
-            <h1>Cindy Workout</h1>
-        </div>
-        <button class="sound-btn" id="soundBtn" onclick="toggleSound()">🔔</button>
-    </header>
-
-    <main>
-        <!-- Timer -->
-        <div class="timer-container">
-            <svg class="progress-ring" viewBox="0 0 240 240">
-                <circle class="progress-ring__circle-bg" cx="120" cy="120" r="105"/>
-                <circle class="progress-ring__circle" id="progressCircle" cx="120" cy="120" r="105"/>
-            </svg>
-            <div class="timer-text-group">
-                <div class="timer-display" id="timerDisplay">20:00</div>
-                <div class="timer-status" id="timerStatus">พร้อมลุย</div>
+    <div class="w-full h-screen max-w-md mx-auto bg-[#0A0A0C] flex flex-col justify-between px-6 py-6 relative overflow-hidden">
+        
+        <!-- Top App Header -->
+        <div class="flex justify-between items-center z-10 shrink-0 pt-2">
+            <div>
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-cyan-400">Workout Session</span>
+                <h1 class="text-xl font-bold tracking-tight text-white">Cindy Workout</h1>
+            </div>
+            <div class="flex items-center space-x-2">
+                <!-- Sound Toggle & Test Button -->
+                <button id="btn-sound-toggle" onclick="toggleSound()" class="px-3 py-1.5 rounded-full glass-button text-xs font-semibold text-cyan-400 hover:text-cyan-300 active:scale-95 transition flex items-center space-x-1.5 border border-cyan-500/30">
+                    <i id="sound-icon" class="fa-solid fa-volume-high text-xs"></i>
+                    <span id="sound-status-text">Sound ON</span>
+                </button>
             </div>
         </div>
 
-        <!-- Exercises List -->
-        <div class="exercise-card">
-            <h3>รายการท่าต่อรอบ</h3>
-            <ul class="exercise-list">
-                <li class="exercise-item">5 Pull-ups</li>
-                <li class="exercise-item">10 Push-ups</li>
-                <li class="exercise-item">15 Air squats</li>
-            </ul>
-        </div>
+        <!-- Central Content Area -->
+        <div class="flex-1 flex flex-col items-center justify-center my-auto z-10 py-2">
+            
+            <div class="relative w-56 h-56 sm:w-64 sm:h-64 my-2 flex items-center justify-center">
+                <!-- SVG Progress Ring -->
+                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <!-- Background Track -->
+                    <circle cx="50" cy="50" r="44" stroke="currentColor" stroke-width="4" class="text-white/10" fill="transparent"/>
+                    <!-- Progress Arc -->
+                    <circle id="timer-progress" cx="50" cy="50" r="44" stroke="currentColor" stroke-width="5" stroke-dasharray="276.46" stroke-dashoffset="0" stroke-linecap="round" class="text-cyan-400 transition-all duration-300" fill="transparent"/>
+                </svg>
 
-        <!-- Set Counter -->
-        <div class="set-card">
-            <div class="set-info">
-                <span class="set-label">จำนวนรอบที่เล่นได้</span>
-                <span class="set-count" id="setCount">0</span>
+                <!-- Timer Inner Content -->
+                <div class="absolute flex flex-col items-center justify-center text-center">
+                    <span id="timer-mode-label" class="text-[10px] font-semibold tracking-widest text-cyan-400 uppercase mb-1">Countdown</span>
+                    <div id="timer-display" class="text-4xl sm:text-5xl font-extrabold tracking-tighter text-white tabular-nums">20:00</div>
+                    <span id="timer-subtext" class="text-[11px] text-white/50 mt-1">Target: 20 min</span>
+                </div>
             </div>
-            <button class="add-set-btn" onclick="addSet()">
-                <span>+1 รอบ</span>
-            </button>
+
+            <!-- Timer Controls (Start, Pause, Reset) -->
+            <div class="flex items-center space-x-3 w-full max-w-xs mt-4 mb-5">
+                <button id="btn-start-pause" onclick="toggleTimer()" class="flex-1 py-4 px-6 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-bold text-sm tracking-wide shadow-lg shadow-cyan-500/20 active:scale-95 transition flex items-center justify-center space-x-2">
+                    <i id="start-pause-icon" class="fa-solid fa-play"></i>
+                    <span id="start-pause-text">Start Timer</span>
+                </button>
+                <button onclick="resetAll()" class="w-14 h-14 rounded-2xl glass-button flex items-center justify-center text-white/90 hover:text-white active:scale-95 transition shadow-sm" title="Reset Timer and Sets">
+                    <i class="fa-solid fa-rotate-right text-base"></i>
+                </button>
+            </div>
+
+            <div class="w-full glass-panel rounded-3xl p-4.5 shadow-xl relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <span class="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Round Routine</span>
+                        <div class="mt-1 space-y-0.5 text-sm font-semibold text-white">
+                            <div class="flex items-center space-x-2">
+                                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                                <span>5 Pull-ups</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                                <span>10 Push-ups</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                                <span>15 Air squats</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-xs font-bold shrink-0">
+                        Rounds Completed: <span id="completed-sets" class="text-sm font-extrabold ml-1">0</span>
+                    </div>
+                </div>
+
+                <!-- Set Progress Bar -->
+                <div class="w-full h-2 bg-white/10 rounded-full overflow-hidden mb-4">
+                    <div id="set-progress-bar" class="h-full bg-gradient-to-r from-cyan-400 to-blue-500 w-[0%] transition-all duration-300"></div>
+                </div>
+
+                <!-- Set Action Buttons -->
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="decrementSet()" class="py-3 rounded-xl glass-button text-xs font-semibold text-white/80 hover:text-white active:scale-95 transition flex items-center justify-center space-x-1.5">
+                        <i class="fa-solid fa-minus text-[10px]"></i>
+                        <span>Subtract Round</span>
+                    </button>
+                    <button onclick="incrementSet()" class="py-3 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-xs font-semibold text-cyan-300 active:scale-95 transition flex items-center justify-center space-x-1.5 shadow-md">
+                        <i class="fa-solid fa-plus text-[10px]"></i>
+                        <span>+1 Round Completed</span>
+                    </button>
+                </div>
+            </div>
+
         </div>
 
-        <!-- Action Buttons -->
-        <div class="controls">
-            <button class="btn btn-start" id="startBtn" onclick="toggleTimer()">เริ่มเวลา</button>
-            <button class="btn btn-reset" onclick="resetAll()">รีเซ็ต</button>
-        </div>
-    </main>
+    </div>
 
     <script>
-        const TOTAL_SECONDS = 20 * 60; // 20 นาที
-        let remainingSeconds = TOTAL_SECONDS;
+        const INITIAL_TIME = 20 * 60; // 20 minutes countdown in seconds
+        let remainingSeconds = INITIAL_TIME;
         let isRunning = false;
-        let sets = 0;
         let soundEnabled = true;
 
-        // Timestamp management
+        let completedSets = 0;
+        const TARGET_SETS_GOAL = 20;
+
+        // Timestamp tracking variables for screen lock support
         let targetEndTime = null;
         let animationFrameId = null;
 
-        // Elements
-        const timerDisplay = document.getElementById('timerDisplay');
-        const timerStatus = document.getElementById('timerStatus');
-        const startBtn = document.getElementById('startBtn');
-        const setCountEl = document.getElementById('setCount');
-        const soundBtn = document.getElementById('soundBtn');
-        const progressCircle = document.getElementById('progressCircle');
+        const timerDisplay = document.getElementById('timer-display');
+        const startPauseText = document.getElementById('start-pause-text');
+        const startPauseIcon = document.getElementById('start-pause-icon');
+        const timerProgress = document.getElementById('timer-progress');
 
-        // Circle Progress Calculation
-        const radius = progressCircle.r.baseVal.value;
-        const circumference = 2 * Math.PI * radius;
-        progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
-
-        function setProgress(percent) {
-            const offset = circumference - (percent * circumference);
-            progressCircle.style.strokeDashoffset = offset;
-        }
-
-        // Web Audio API Sound Generator
         let audioCtx = null;
 
-        function initAudio() {
+        function getAudioContext() {
             if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtx = new AudioContext();
+                }
             }
-            if (audioCtx.state === 'suspended') {
+            if (audioCtx && audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
+            return audioCtx;
         }
 
-        function playBeep(freq = 880, duration = 0.15, type = 'sine') {
+        function playBeep(frequency = 880, duration = 0.2, count = 1, interval = 0.3) {
             if (!soundEnabled) return;
-            try {
-                initAudio();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = type;
-                osc.frequency.value = freq;
-                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            const ctx = getAudioContext();
+            if (!ctx) return;
+
+            for (let i = 0; i < count; i++) {
+                const startTime = ctx.currentTime + (i * interval);
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(frequency, startTime);
+
+                gain.gain.setValueAtTime(0.3, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
                 osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + duration);
-            } catch (e) {
-                console.log("Audio play error", e);
-            }
-        }
+                gain.connect(ctx.destination);
 
-        function playAlarmSound() {
-            if (!soundEnabled) return;
-            let count = 0;
-            const interval = setInterval(() => {
-                playBeep(1000, 0.25, 'triangle');
-                count++;
-                if (count >= 4) clearInterval(interval);
-            }, 350);
+                osc.start(startTime);
+                osc.stop(startTime + duration);
+            }
         }
 
         function toggleSound() {
             soundEnabled = !soundEnabled;
-            soundBtn.textContent = soundEnabled ? '🔔' : '🔕';
-            if (soundEnabled) playBeep(600, 0.1);
+            const statusText = document.getElementById('sound-status-text');
+            const icon = document.getElementById('sound-icon');
+            
+            if (soundEnabled) {
+                statusText.innerText = 'Sound ON';
+                icon.className = 'fa-solid fa-volume-high text-xs';
+                playBeep(880, 0.15, 1);
+            } else {
+                statusText.innerText = 'Sound OFF';
+                icon.className = 'fa-solid fa-volume-xmark text-xs';
+            }
         }
 
-        // Main Timer Loop using Timestamp
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        function updateDisplay() {
+            timerDisplay.innerText = formatTime(remainingSeconds);
+            const circumference = 276.46;
+            const offset = circumference - (remainingSeconds / INITIAL_TIME) * circumference;
+            timerProgress.style.strokeDashoffset = offset;
+        }
+
+        function toggleTimer() {
+            getAudioContext();
+            if (isRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        }
+
         function updateLoop() {
             if (!isRunning) return;
 
@@ -412,82 +249,90 @@
             const timeDiffMs = targetEndTime - now;
             remainingSeconds = Math.max(0, Math.ceil(timeDiffMs / 1000));
 
-            updateUI();
+            updateDisplay();
 
             if (remainingSeconds <= 0) {
                 isRunning = false;
-                startBtn.textContent = 'เริ่มเวลา';
-                startBtn.className = 'btn btn-start';
-                timerStatus.textContent = 'หมดเวลาแล้ว!';
-                playAlarmSound();
+                cancelAnimationFrame(animationFrameId);
+                startPauseText.innerText = 'Start Timer';
+                startPauseIcon.className = 'fa-solid fa-play';
+                
+                playBeep(880, 0.4, 4, 0.5);
+                triggerVibration();
                 return;
             }
 
             animationFrameId = requestAnimationFrame(updateLoop);
         }
 
-        function toggleTimer() {
-            initAudio();
-            if (isRunning) {
-                // Pause
-                isRunning = false;
-                cancelAnimationFrame(animationFrameId);
-                startBtn.textContent = 'เล่นต่อ';
-                startBtn.className = 'btn btn-start';
-                timerStatus.textContent = 'หยุดชั่วคราว';
-                playBeep(440, 0.1);
-            } else {
-                if (remainingSeconds <= 0) remainingSeconds = TOTAL_SECONDS;
-                
-                // Start / Resume
-                isRunning = true;
-                targetEndTime = Date.now() + (remainingSeconds * 1000);
-                startBtn.textContent = 'หยุดชั่วคราว';
-                startBtn.className = 'btn btn-pause';
-                timerStatus.textContent = 'กำลังนับถอยหลัง...';
-                playBeep(880, 0.1);
-                
-                updateLoop();
-            }
+        function startTimer() {
+            if (remainingSeconds <= 0) remainingSeconds = INITIAL_TIME;
+            
+            isRunning = true;
+            targetEndTime = Date.now() + (remainingSeconds * 1000);
+            startPauseText.innerText = 'Pause';
+            startPauseIcon.className = 'fa-solid fa-pause';
+
+            updateLoop();
+        }
+
+        function pauseTimer() {
+            isRunning = false;
+            cancelAnimationFrame(animationFrameId);
+            startPauseText.innerText = 'Resume';
+            startPauseIcon.className = 'fa-solid fa-play';
         }
 
         function resetAll() {
-            playBeep(330, 0.15);
-            isRunning = false;
-            cancelAnimationFrame(animationFrameId);
-            remainingSeconds = TOTAL_SECONDS;
-            sets = 0;
-            setCountEl.textContent = sets;
-            startBtn.textContent = 'เริ่มเวลา';
-            startBtn.className = 'btn btn-start';
-            timerStatus.textContent = 'พร้อมลุย';
-            updateUI();
+            pauseTimer();
+            remainingSeconds = INITIAL_TIME;
+            updateDisplay();
+            startPauseText.innerText = 'Start Timer';
+            startPauseIcon.className = 'fa-solid fa-play';
+
+            // Clear sets counter and reset progress bar
+            completedSets = 0;
+            updateSetUI();
+            playBeep(400, 0.1);
         }
 
-        function addSet() {
-            sets++;
-            setCountEl.textContent = sets;
-            playBeep(1200, 0.1);
+        function incrementSet() {
+            getAudioContext();
+            completedSets++;
+            updateSetUI();
+            playBeep(1200, 0.08, 1);
         }
 
-        function updateUI() {
-            const mins = Math.floor(remainingSeconds / 60);
-            const secs = remainingSeconds % 60;
-            timerDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-            
-            const progress = remainingSeconds / TOTAL_SECONDS;
-            setProgress(progress);
+        function decrementSet() {
+            getAudioContext();
+            if (completedSets > 0) {
+                completedSets--;
+                updateSetUI();
+            }
         }
 
-        // Recalculate time seamlessly when waking iPhone screen or switching tabs
+        function updateSetUI() {
+            document.getElementById('completed-sets').innerText = completedSets;
+            const percentage = Math.min((completedSets / TARGET_SETS_GOAL) * 100, 100);
+            document.getElementById('set-progress-bar').style.width = `${percentage}%`;
+        }
+
+        function triggerVibration() {
+            if (navigator.vibrate) {
+                navigator.vibrate([300, 150, 300, 150, 400]);
+            }
+        }
+
+        // Handle screen wake / tab focus sync
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible' && isRunning) {
                 updateLoop();
             }
         });
 
-        // Initialize
-        updateUI();
+        // Initial render
+        updateDisplay();
+        updateSetUI();
     </script>
 </body>
 </html>
