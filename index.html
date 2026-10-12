@@ -216,4 +216,278 @@
         .add-set-btn {
             background: var(--accent-blue);
             color: #FFFFFF;
-            border: none
+            border: none;
+            padding: 14px 22px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
+        }
+
+        .add-set-btn:active {
+            transform: scale(0.95);
+            background: #0071E3;
+        }
+
+        /* Action Controls */
+        .controls {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 12px;
+            width: 100%;
+            max-width: 360px;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 16px;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-start {
+            background: var(--accent-green);
+            color: #000000;
+        }
+
+        .btn-pause {
+            background: #FF9F0A;
+            color: #000000;
+        }
+
+        .btn-reset {
+            background: rgba(255, 69, 58, 0.15);
+            color: var(--accent-red);
+            border: 1px solid rgba(255, 69, 58, 0.3);
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="title-group">
+            <h1>Cindy Workout</h1>
+        </div>
+        <button class="sound-btn" id="soundBtn" onclick="toggleSound()">🔔</button>
+    </header>
+
+    <main>
+        <!-- Timer -->
+        <div class="timer-container">
+            <svg class="progress-ring" viewBox="0 0 240 240">
+                <circle class="progress-ring__circle-bg" cx="120" cy="120" r="105"/>
+                <circle class="progress-ring__circle" id="progressCircle" cx="120" cy="120" r="105"/>
+            </svg>
+            <div class="timer-text-group">
+                <div class="timer-display" id="timerDisplay">20:00</div>
+                <div class="timer-status" id="timerStatus">พร้อมลุย</div>
+            </div>
+        </div>
+
+        <!-- Exercises List -->
+        <div class="exercise-card">
+            <h3>รายการท่าต่อรอบ</h3>
+            <ul class="exercise-list">
+                <li class="exercise-item">5 Pull-ups</li>
+                <li class="exercise-item">10 Push-ups</li>
+                <li class="exercise-item">15 Air squats</li>
+            </ul>
+        </div>
+
+        <!-- Set Counter -->
+        <div class="set-card">
+            <div class="set-info">
+                <span class="set-label">จำนวนรอบที่เล่นได้</span>
+                <span class="set-count" id="setCount">0</span>
+            </div>
+            <button class="add-set-btn" onclick="addSet()">
+                <span>+1 รอบ</span>
+            </button>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="controls">
+            <button class="btn btn-start" id="startBtn" onclick="toggleTimer()">เริ่มเวลา</button>
+            <button class="btn btn-reset" onclick="resetAll()">รีเซ็ต</button>
+        </div>
+    </main>
+
+    <script>
+        const TOTAL_SECONDS = 20 * 60; // 20 นาที
+        let remainingSeconds = TOTAL_SECONDS;
+        let isRunning = false;
+        let sets = 0;
+        let soundEnabled = true;
+
+        // Timestamp management
+        let targetEndTime = null;
+        let animationFrameId = null;
+
+        // Elements
+        const timerDisplay = document.getElementById('timerDisplay');
+        const timerStatus = document.getElementById('timerStatus');
+        const startBtn = document.getElementById('startBtn');
+        const setCountEl = document.getElementById('setCount');
+        const soundBtn = document.getElementById('soundBtn');
+        const progressCircle = document.getElementById('progressCircle');
+
+        // Circle Progress Calculation
+        const radius = progressCircle.r.baseVal.value;
+        const circumference = 2 * Math.PI * radius;
+        progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
+
+        function setProgress(percent) {
+            const offset = circumference - (percent * circumference);
+            progressCircle.style.strokeDashoffset = offset;
+        }
+
+        // Web Audio API Sound Generator
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playBeep(freq = 880, duration = 0.15, type = 'sine') {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.log("Audio play error", e);
+            }
+        }
+
+        function playAlarmSound() {
+            if (!soundEnabled) return;
+            let count = 0;
+            const interval = setInterval(() => {
+                playBeep(1000, 0.25, 'triangle');
+                count++;
+                if (count >= 4) clearInterval(interval);
+            }, 350);
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            soundBtn.textContent = soundEnabled ? '🔔' : '🔕';
+            if (soundEnabled) playBeep(600, 0.1);
+        }
+
+        // Main Timer Loop using Timestamp
+        function updateLoop() {
+            if (!isRunning) return;
+
+            const now = Date.now();
+            const timeDiffMs = targetEndTime - now;
+            remainingSeconds = Math.max(0, Math.ceil(timeDiffMs / 1000));
+
+            updateUI();
+
+            if (remainingSeconds <= 0) {
+                isRunning = false;
+                startBtn.textContent = 'เริ่มเวลา';
+                startBtn.className = 'btn btn-start';
+                timerStatus.textContent = 'หมดเวลาแล้ว!';
+                playAlarmSound();
+                return;
+            }
+
+            animationFrameId = requestAnimationFrame(updateLoop);
+        }
+
+        function toggleTimer() {
+            initAudio();
+            if (isRunning) {
+                // Pause
+                isRunning = false;
+                cancelAnimationFrame(animationFrameId);
+                startBtn.textContent = 'เล่นต่อ';
+                startBtn.className = 'btn btn-start';
+                timerStatus.textContent = 'หยุดชั่วคราว';
+                playBeep(440, 0.1);
+            } else {
+                if (remainingSeconds <= 0) remainingSeconds = TOTAL_SECONDS;
+                
+                // Start / Resume
+                isRunning = true;
+                targetEndTime = Date.now() + (remainingSeconds * 1000);
+                startBtn.textContent = 'หยุดชั่วคราว';
+                startBtn.className = 'btn btn-pause';
+                timerStatus.textContent = 'กำลังนับถอยหลัง...';
+                playBeep(880, 0.1);
+                
+                updateLoop();
+            }
+        }
+
+        function resetAll() {
+            playBeep(330, 0.15);
+            isRunning = false;
+            cancelAnimationFrame(animationFrameId);
+            remainingSeconds = TOTAL_SECONDS;
+            sets = 0;
+            setCountEl.textContent = sets;
+            startBtn.textContent = 'เริ่มเวลา';
+            startBtn.className = 'btn btn-start';
+            timerStatus.textContent = 'พร้อมลุย';
+            updateUI();
+        }
+
+        function addSet() {
+            sets++;
+            setCountEl.textContent = sets;
+            playBeep(1200, 0.1);
+        }
+
+        function updateUI() {
+            const mins = Math.floor(remainingSeconds / 60);
+            const secs = remainingSeconds % 60;
+            timerDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            
+            const progress = remainingSeconds / TOTAL_SECONDS;
+            setProgress(progress);
+        }
+
+        // Recalculate time seamlessly when waking iPhone screen or switching tabs
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && isRunning) {
+                updateLoop();
+            }
+        });
+
+        // Initialize
+        updateUI();
+    </script>
+</body>
+</html>
