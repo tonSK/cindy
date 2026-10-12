@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Cindy Workout</title>
+    <title>Cindy Workout Timer</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -16,7 +16,7 @@
                         appleCard: '#16161A',
                         appleCardBorder: '#27272A',
                         accentBlue: '#00F0FF',
-                        accentPurple: '#8B5CF6'
+                        accentGreen: '#30D158'
                     },
                     fontFamily: {
                         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
@@ -61,7 +61,7 @@
                 <h1 class="text-xl font-bold tracking-tight text-white">Cindy Workout</h1>
             </div>
             <div class="flex items-center space-x-2">
-                <!-- Sound Toggle & Test Button -->
+                <!-- Sound Toggle Button -->
                 <button id="btn-sound-toggle" onclick="toggleSound()" class="px-3 py-1.5 rounded-full glass-button text-xs font-semibold text-cyan-400 hover:text-cyan-300 active:scale-95 transition flex items-center space-x-1.5 border border-cyan-500/30">
                     <i id="sound-icon" class="fa-solid fa-volume-high text-xs"></i>
                     <span id="sound-status-text">Sound ON</span>
@@ -75,9 +75,7 @@
             <div class="relative w-56 h-56 sm:w-64 sm:h-64 my-2 flex items-center justify-center">
                 <!-- SVG Progress Ring -->
                 <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                    <!-- Background Track -->
                     <circle cx="50" cy="50" r="44" stroke="currentColor" stroke-width="4" class="text-white/10" fill="transparent"/>
-                    <!-- Progress Arc -->
                     <circle id="timer-progress" cx="50" cy="50" r="44" stroke="currentColor" stroke-width="5" stroke-dasharray="276.46" stroke-dashoffset="0" stroke-linecap="round" class="text-cyan-400 transition-all duration-300" fill="transparent"/>
                 </svg>
 
@@ -95,7 +93,7 @@
                     <i id="start-pause-icon" class="fa-solid fa-play"></i>
                     <span id="start-pause-text">Start Timer</span>
                 </button>
-                <button onclick="resetAll()" class="w-14 h-14 rounded-2xl glass-button flex items-center justify-center text-white/90 hover:text-white active:scale-95 transition shadow-sm" title="Reset Timer and Sets">
+                <button onclick="resetAll()" class="w-14 h-14 rounded-2xl glass-button flex items-center justify-center text-white/90 hover:text-white active:scale-95 transition shadow-sm" title="Reset">
                     <i class="fa-solid fa-rotate-right text-base"></i>
                 </button>
             </div>
@@ -139,13 +137,35 @@
                     </button>
                     <button onclick="incrementSet()" class="py-3 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-xs font-semibold text-cyan-300 active:scale-95 transition flex items-center justify-center space-x-1.5 shadow-md">
                         <i class="fa-solid fa-plus text-[10px]"></i>
-                        <span>Round Completed</span>
+                        <span>+1 Round Completed</span>
                     </button>
                 </div>
             </div>
 
         </div>
 
+    </div>
+
+    <!-- Workout Summary Modal (Pop-up เมื่อครบ 20 นาที) -->
+    <div id="summary-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-6 hidden opacity-0 transition-opacity duration-300">
+        <div class="glass-panel w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl border border-cyan-500/30 transform scale-95 transition-transform duration-300" id="summary-modal-content">
+            <div class="w-16 h-16 bg-cyan-500/20 text-cyan-400 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl border border-cyan-500/40 shadow-lg shadow-cyan-500/20">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <span class="text-xs font-semibold text-cyan-400 tracking-widest uppercase">Workout Completed!</span>
+            <h2 class="text-2xl font-bold text-white mt-1 mb-2">ยอดเยี่ยมมาก!</h2>
+            <p class="text-sm text-white/70 mb-6">คุณทำ Cindy Workout ครบ 20 นาทีเรียบร้อยแล้ว</p>
+            
+            <div class="bg-white/5 rounded-2xl p-4 mb-6 border border-white/10">
+                <span class="text-xs text-white/50 uppercase tracking-wider block">Total Rounds Completed</span>
+                <span id="final-sets-count" class="text-4xl font-extrabold text-cyan-400">0</span>
+                <span class="text-sm text-white/80 ml-1 font-semibold">รอบ</span>
+            </div>
+
+            <button onclick="closeSummaryModal()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-bold text-sm tracking-wide shadow-lg shadow-cyan-500/20 active:scale-95 transition">
+                ตกลง / เริ่มใหม่
+            </button>
+        </div>
     </div>
 
     <script>
@@ -164,8 +184,10 @@
         const startPauseText = document.getElementById('start-pause-text');
         const startPauseIcon = document.getElementById('start-pause-icon');
         const timerProgress = document.getElementById('timer-progress');
+        const summaryModal = document.getElementById('summary-modal');
+        const summaryModalContent = document.getElementById('summary-modal-content');
+        const finalSetsCount = document.getElementById('final-sets-count');
 
-        // Initialize AudioContext globally once on load/interaction
         let audioCtx = null;
 
         function initAudioContext() {
@@ -180,7 +202,6 @@
             }
         }
 
-        // Trigger global audio initialization on first touch/click anywhere on page
         document.addEventListener('click', () => {
             initAudioContext();
         }, { once: true });
@@ -263,6 +284,7 @@
                 
                 playBeep(880, 0.4, 4, 0.5);
                 triggerVibration();
+                showSummaryModal();
                 return;
             }
 
@@ -320,6 +342,26 @@
             document.getElementById('completed-sets').innerText = completedSets;
             const percentage = Math.min((completedSets / TARGET_SETS_GOAL) * 100, 100);
             document.getElementById('set-progress-bar').style.width = `${percentage}%`;
+        }
+
+        function showSummaryModal() {
+            finalSetsCount.innerText = completedSets;
+            summaryModal.classList.remove('hidden');
+            setTimeout(() => {
+                summaryModal.classList.remove('opacity-0');
+                summaryModalContent.classList.remove('scale-95');
+                summaryModalContent.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeSummaryModal() {
+            summaryModal.classList.add('opacity-0');
+            summaryModalContent.classList.remove('scale-100');
+            summaryModalContent.classList.add('scale-95');
+            setTimeout(() => {
+                summaryModal.classList.add('hidden');
+                resetAll();
+            }, 300);
         }
 
         function triggerVibration() {
