@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>iPhone Workout Timer & Set Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        appleDark: '#0A0A0C',
+                        appleCard: '#16161A',
+                        appleCardBorder: '#27272A',
+                        accentBlue: '#00F0FF',
+                        accentPurple: '#8B5CF6'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #0A0A0C;
+            color: #F8FAFC;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .glass-panel {
+            background: rgba(22, 22, 26, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-button {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-[#0A0A0C] overflow-hidden selection:bg-cyan-500 selection:text-black">
+
+    <div class="w-full h-screen max-w-md mx-auto bg-[#0A0A0C] flex flex-col justify-between px-6 py-6 relative overflow-hidden">
+        
+        <!-- Top App Header -->
+        <div class="flex justify-between items-center z-10 shrink-0 pt-2">
+            <div>
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-cyan-400">Workout Session</span>
+                <h1 class="text-xl font-bold tracking-tight text-white">Cindy Workout</h1>
+            </div>
+        </div>
+
+        <!-- Central Content Area -->
+        <div class="flex-1 flex flex-col items-center justify-center my-auto z-10 py-2">
+            
+            <!-- Circular Timer Display Component -->
+            <div class="relative w-56 h-56 sm:w-64 sm:h-64 my-2 flex items-center justify-center">
+                <!-- SVG Progress Ring -->
+                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <!-- Background Track -->
+                    <circle cx="50" cy="50" r="44" stroke="currentColor" stroke-width="4" class="text-white/10" fill="transparent"/>
+                    <!-- Progress Arc -->
+                    <circle id="timer-progress" cx="50" cy="50" r="44" stroke="currentColor" stroke-width="5" stroke-dasharray="276.46" stroke-dashoffset="0" stroke-linecap="round" class="text-cyan-400 transition-all duration-300" fill="transparent"/>
+                </svg>
+
+                <!-- Timer Inner Content -->
+                <div class="absolute flex flex-col items-center justify-center text-center">
+                    <span id="timer-mode-label" class="text-[10px] font-semibold tracking-widest text-cyan-400 uppercase mb-1">Countdown</span>
+                    <div id="timer-display" class="text-4xl sm:text-5xl font-extrabold tracking-tighter text-white tabular-nums">20:00</div>
+                    <span id="timer-subtext" class="text-[11px] text-white/50 mt-1">Target: 20 min</span>
+                </div>
+            </div>
+
+            <!-- Timer Controls (Start, Pause, Reset) -->
+            <div class="flex items-center space-x-3 w-full max-w-xs mt-4 mb-5">
+                <button id="btn-start-pause" onclick="toggleTimer()" class="flex-1 py-4 px-6 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-bold text-sm tracking-wide shadow-lg shadow-cyan-500/20 active:scale-95 transition flex items-center justify-center space-x-2">
+                    <i id="start-pause-icon" class="fa-solid fa-play"></i>
+                    <span id="start-pause-text">Start Timer</span>
+                </button>
+                <button onclick="resetTimer()" class="w-14 h-14 rounded-2xl glass-button flex items-center justify-center text-white/90 hover:text-white active:scale-95 transition shadow-sm">
+                    <i class="fa-solid fa-rotate-right text-base"></i>
+                </button>
+            </div>
+
+            <!-- Set Management Card -->
+            <div class="w-full glass-panel rounded-3xl p-4.5 shadow-xl relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <span class="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Round Routine</span>
+                        <div class="mt-1 space-y-0.5 text-sm font-semibold text-white">
+                            <div class="flex items-center space-x-2">
+                                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                                <span>5 Pull-ups</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                                <span>10 Push-ups</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                                <span>15 Air squats</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-xs font-bold shrink-0">
+                        Set <span id="current-set">1</span>/<span id="total-sets">5</span>
+                    </div>
+                </div>
+
+                <!-- Set Progress Bar -->
+                <div class="w-full h-2 bg-white/10 rounded-full overflow-hidden mb-4">
+                    <div id="set-progress-bar" class="h-full bg-gradient-to-r from-cyan-400 to-blue-500 w-[20%] transition-all duration-300"></div>
+                </div>
+
+                <!-- Set Action Buttons -->
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="decrementSet()" class="py-3 rounded-xl glass-button text-xs font-semibold text-white/80 hover:text-white active:scale-95 transition flex items-center justify-center space-x-1.5">
+                        <i class="fa-solid fa-minus text-[10px]"></i>
+                        <span>Prev Set</span>
+                    </button>
+                    <button onclick="incrementSet()" class="py-3 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-xs font-semibold text-cyan-300 active:scale-95 transition flex items-center justify-center space-x-1.5 shadow-md">
+                        <i class="fa-solid fa-plus text-[10px]"></i>
+                        <span>Add / Next Set</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        let totalSeconds = 20 * 60; // 20 minutes default countdown
+        let remainingSeconds = totalSeconds;
+        let timerInterval = null;
+        let isRunning = false;
+
+        let currentSet = 1;
+        let totalSets = 5;
+
+        const timerDisplay = document.getElementById('timer-display');
+        const startPauseText = document.getElementById('start-pause-text');
+        const startPauseIcon = document.getElementById('start-pause-icon');
+        const timerProgress = document.getElementById('timer-progress');
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        function updateDisplay() {
+            timerDisplay.innerText = formatTime(remainingSeconds);
+            const circumference = 276.46;
+            const offset = circumference - (remainingSeconds / totalSeconds) * circumference;
+            timerProgress.style.strokeDashoffset = offset;
+        }
+
+        function toggleTimer() {
+            if (isRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            if (remainingSeconds <= 0) return;
+            isRunning = true;
+            startPauseText.innerText = 'Pause';
+            startPauseIcon.className = 'fa-solid fa-pause';
+
+            timerInterval = setInterval(() => {
+                if (remainingSeconds > 0) {
+                    remainingSeconds--;
+                    updateDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    startPauseText.innerText = 'Start Timer';
+                    startPauseIcon.className = 'fa-solid fa-play';
+                    triggerVibration();
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            startPauseText.innerText = 'Resume';
+            startPauseIcon.className = 'fa-solid fa-play';
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            remainingSeconds = totalSeconds;
+            updateDisplay();
+            startPauseText.innerText = 'Start Timer';
+            startPauseIcon.className = 'fa-solid fa-play';
+        }
+
+        function incrementSet() {
+            if (currentSet < totalSets) {
+                currentSet++;
+            } else {
+                totalSets++;
+                currentSet++;
+            }
+            updateSetUI();
+        }
+
+        function decrementSet() {
+            if (currentSet > 1) {
+                currentSet--;
+                updateSetUI();
+            }
+        }
+
+        function updateSetUI() {
+            document.getElementById('current-set').innerText = currentSet;
+            document.getElementById('total-sets').innerText = totalSets;
+            const percentage = (currentSet / totalSets) * 100;
+            document.getElementById('set-progress-bar').style.width = `${percentage}%`;
+        }
+
+        function triggerVibration() {
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200]);
+            }
+        }
+
+        updateDisplay();
+    </script>
+</body>
+</html>
